@@ -1,0 +1,54 @@
+#CONVERT TO YOUTUBES DATETIME-FORMAT
+import datetime, timedelta
+import pytz
+
+from datetime import datetime, timedelta
+
+d = datetime.utcnow() - timedelta(days=7)
+d_with_timezone = d.replace(microsecond=0)
+dfinal = d_with_timezone.isoformat()+"Z"
+
+
+#API LOGIN
+api_key = "YOUR API KEY"
+from apiclient.discovery import build
+youtube = build('youtube','v3', developerKey=api_key)
+
+#CHOOSE WHICH SEARCH TERM TO OUTPUT
+topic = input("Enter a search term: ")
+
+req = youtube.search().list(
+    q=topic, 
+    publishedAfter=dfinal, 
+    order='viewCount', 
+    part='id,snippet', 
+    type='video', 
+    maxResults='50'
+    )
+
+#type = video, channel or playlist. You can actually add .execute() right after the query??
+#order = rating, viewCount 
+
+res = req.execute()
+
+res["items"]
+
+for item in res['items']:
+    print(item['snippet']['channelTitle'], "/", item['snippet']['title'])
+
+video_dict = {'channelTitle':[], 'videoTitle':[], 'pubDate':[], 'description':[], 'videoId':[]}
+
+for item in res['items']:
+    video_dict['channelTitle'].append(item['snippet']['channelTitle'])
+    video_dict['videoTitle'].append(item['snippet']['title'])
+    video_dict['pubDate'].append(item['snippet']['publishedAt'])
+    video_dict['description'].append(item['snippet']['description'])
+    video_dict['videoId'].append(item['id']['videoId'])
+
+#MAKE A NICE TABLE FROM OUR RESULTS
+import pandas as pd
+table = pd.DataFrame(video_dict, columns=['channelTitle', 'videoTitle', 'pubDate', 'description', 'videoId'])
+table
+
+#OUTPUT THE TABLE TO CSV
+killerlist.to_csv("day2.csv", index=False)
